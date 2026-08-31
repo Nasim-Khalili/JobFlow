@@ -15,6 +15,7 @@ class JobSerializer(serializers.ModelSerializer):
             "progress",
             "created_at",
             "updated_at",
+            "input_file",
         ]
 
         read_only_fields = [

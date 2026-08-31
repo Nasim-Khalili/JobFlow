@@ -51,6 +51,12 @@ class Job(models.Model):
         blank=True,
     )
 
+    input_file = models.FileField(
+        upload_to="jobs/input/",
+        null=True,
+        blank=True,
+    )
+
     progress = models.PositiveSmallIntegerField(
         default=0,
     )
