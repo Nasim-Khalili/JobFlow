@@ -60,6 +60,15 @@ class Job(models.Model):
     progress = models.PositiveSmallIntegerField(
         default=0,
     )
+    celery_task_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+)
+
+    cancel_requested = models.BooleanField(
+        default=False,
+    )
 
     created_at = models.DateTimeField(
         auto_now_add=True,

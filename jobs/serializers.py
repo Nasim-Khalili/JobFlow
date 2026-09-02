@@ -8,25 +8,29 @@ from .models import Job
 class JobSerializer(serializers.ModelSerializer):
     class Meta:
         model = Job
-        fields = [
-            "id",
-            "job_type",
-            "priority",
-            "status",
-            "payload",
-            "input_file",
-            "progress",
-            "created_at",
-            "updated_at",
-        ]
+    fields = [
+        "id",
+        "job_type",
+        "priority",
+        "status",
+        "payload",
+        "input_file",
+        "progress",
+        "celery_task_id",
+        "cancel_requested",
+        "created_at",
+        "updated_at",
+    ]
 
-        read_only_fields = [
-            "id",
-            "status",
-            "progress",
-            "created_at",
-            "updated_at",
-        ]
+    read_only_fields = [
+        "id",
+        "status",
+        "progress",
+        "celery_task_id",
+        "cancel_requested",
+        "created_at",
+        "updated_at",
+    ]
 
     def validate(self, attrs):
         job_type = attrs.get("job_type")
