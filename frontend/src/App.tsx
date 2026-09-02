@@ -1,56 +1,41 @@
-import { useState } from "react";
-import { login } from "./services/auth";
+import { Navigate, Route, Routes } from "react-router-dom";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-
-  const handleLogin = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    try {
-      const data = await login(username, password);
-
-      localStorage.setItem("access_token", data.access);
-      localStorage.setItem("refresh_token", data.refresh);
-
-      setMessage("Login successful!");
-    } catch (error) {
-      setMessage("Invalid username or password.");
-    }
-  };
+  const isAuthenticated = Boolean(
+    localStorage.getItem("access_token")
+  );
 
   return (
-    <div>
-      <h1>JobFlow</h1>
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          isAuthenticated ? (
+            <Navigate to="/dashboard" />
+          ) : (
+            <Login />
+          )
+        }
+      />
 
-      <form onSubmit={handleLogin}>
-        <div>
-          <label>Username</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            required
-          />
-        </div>
+      <Route
+        path="/dashboard"
+        element={
+          isAuthenticated ? (
+            <Dashboard />
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
 
-        <div>
-          <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-        </div>
-
-        <button type="submit">Login</button>
-      </form>
-
-      {message && <p>{message}</p>}
-    </div>
+      <Route
+        path="*"
+        element={<Navigate to="/dashboard" />}
+      />
+    </Routes>
   );
 }
 
