@@ -71,3 +71,54 @@ class Job(models.Model):
 
     def __str__(self):
         return f"{self.job_type} - {self.status}"
+
+
+class JobResult(models.Model):
+    job = models.OneToOneField(
+        Job,
+        on_delete=models.CASCADE,
+        related_name="result",
+    )
+
+    result = models.JSONField(
+        default=dict,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    def __str__(self):
+        return f"Result for Job #{self.job_id}"
+
+class JobAttempt(models.Model):
+    job = models.ForeignKey(
+        Job,
+        on_delete=models.CASCADE,
+        related_name="attempts",
+    )
+
+    attempt_number = models.PositiveIntegerField()
+
+    status = models.CharField(
+        max_length=20,
+        choices=Job.Status.choices,
+        default=Job.Status.PROCESSING,
+    )
+
+    error_message = models.TextField(
+        blank=True,
+        null=True,
+    )
+
+    started_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    finished_at = models.DateTimeField(
+        blank=True,
+        null=True,
+    )
+
+    def __str__(self):
+        return f"Job #{self.job_id} - Attempt #{self.attempt_number}"
