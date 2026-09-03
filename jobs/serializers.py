@@ -2,35 +2,58 @@ from pathlib import Path
 
 from rest_framework import serializers
 
-from .models import Job
+from .models import Job, JobAttempt
+
+
+class JobAttemptSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobAttempt
+        fields = [
+            "attempt_number",
+            "status",
+            "error_message",
+            "started_at",
+            "finished_at",
+        ]
 
 
 class JobSerializer(serializers.ModelSerializer):
+    result = serializers.SerializerMethodField()
+    attempts = JobAttemptSerializer(many=True, read_only=True)
+
     class Meta:
         model = Job
-    fields = [
-        "id",
-        "job_type",
-        "priority",
-        "status",
-        "payload",
-        "input_file",
-        "progress",
-        "celery_task_id",
-        "cancel_requested",
-        "created_at",
-        "updated_at",
-    ]
+        fields = [
+            "id",
+            "job_type",
+            "priority",
+            "status",
+            "payload",
+            "input_file",
+            "progress",
+            "celery_task_id",
+            "cancel_requested",
+            "created_at",
+            "updated_at",
+            "result",
+            "attempts",
+        ]
 
-    read_only_fields = [
-        "id",
-        "status",
-        "progress",
-        "celery_task_id",
-        "cancel_requested",
-        "created_at",
-        "updated_at",
-    ]
+    def get_result(self, obj):
+        try:
+            return obj.result.result
+        except Job.result.RelatedObjectDoesNotExist:
+            return None
+
+        read_only_fields = [
+            "id",
+            "status",
+            "progress",
+            "celery_task_id",
+            "cancel_requested",
+            "created_at",
+            "updated_at",
+        ]
 
     def validate(self, attrs):
         job_type = attrs.get("job_type")
