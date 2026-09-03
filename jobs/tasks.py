@@ -1,9 +1,12 @@
 from celery import shared_task
 from django.db import transaction
 from django.utils import timezone
+import logging
 
 from .models import Job, JobAttempt, JobResult
 from .processors import process_csv
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -21,6 +24,7 @@ def test_task():
 )
 def process_job(self, job_id):
     job = Job.objects.get(id=job_id)
+    logger.info("Job %s received by worker", job_id)
 
     attempt_number = self.request.retries + 1
 
@@ -67,6 +71,7 @@ def process_job(self, job_id):
                 "updated_at",
             ]
         )
+        logger.info("Job %s processing started", job_id)
 
         # Validate job type
         if job.job_type != Job.JobType.CSV_ANALYSIS:
@@ -93,6 +98,7 @@ def process_job(self, job_id):
         result = process_csv(
             job.input_file.path
         )
+        logger.info("CSV processing completed for job %s", job_id)
 
         # Check cancellation after processing
         job.refresh_from_db()
@@ -118,6 +124,7 @@ def process_job(self, job_id):
                     "finished_at",
                 ]
             )
+            logger.info("Job %s marked SUCCESS and result saved", job_id)
 
             return {
                 "status": "cancelled"
@@ -176,6 +183,15 @@ def process_job(self, job_id):
                 "finished_at",
             ]
         )
+
+        if self.request.retries >= self.max_retries:
+            job.status = Job.Status.FAILED
+            job.save(update_fields=["status", "updated_at"])
+            logger.exception("Job %s failed permanently", job_id)
+        else:
+            job.status = Job.Status.RETRYING
+            job.save(update_fields=["status", "updated_at"])
+            logger.warning("Job %s failed; retry %s scheduled", job_id, self.request.retries + 1)
 
         raise
 
